@@ -1,7 +1,8 @@
 // ignore_for_file: file_names, camel_case_types
 
 import 'package:flutter/material.dart';
-import 'package:moto_visor/pages/screens/homePage.dart';
+
+import 'package:moto_visor/pages/screens/homepage.dart';
 
 class mainPage extends StatelessWidget {
   const mainPage({Key? key}) : super(key: key);
