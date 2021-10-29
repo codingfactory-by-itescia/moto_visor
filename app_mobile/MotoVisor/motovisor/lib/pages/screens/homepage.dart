@@ -5,6 +5,7 @@ import 'package:battery/battery.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:moto_visor/pages/bluetooth/bluetoothPage.dart';
+import 'package:moto_visor/pages/navigation/navigationPage.dart';
 
 class homepage extends StatefulWidget {
   const homepage({Key? key}) : super(key: key);
@@ -103,6 +104,20 @@ class _homepageState extends State<homepage> {
               color: Colors.black, fontSize: 20, fontWeight: FontWeight.w700),
         ),
         actions: [
+          Container(
+            padding: const EdgeInsets.all(5.0),
+            child: IconButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return const NavigationPage();
+                  }));
+                },
+                icon: const Icon(
+                  Icons.location_on,
+                  color: Colors.lightBlue,
+                  size: 20,
+                )),
+            ),
           Container(
             padding: const EdgeInsets.all(5.0),
             child: IconButton(
