@@ -15,19 +15,12 @@ class NavigationPage extends StatefulWidget {
 
 class _NavigationPageState extends State<NavigationPage> {
 
-  String _platformVersion = 'Unknown';
-  String _instruction = "";
-
-  final _destination = WayPoint(
-    name: "My destination",
-    latitude: 48.97736288804228,
-    longitude: 1.911989432551735
-  );
   final _formKey = GlobalKey<FormState>();
-
   late MapBoxNavigation _directions;
   late MapBoxOptions _options;
   late MapBoxNavigationViewController _controller;
+  late double _positionLatitude, _positionLongitude;
+  late String _destinationLatitude, _destinationLongitude;
 
   bool _isMultipleStop = false;
   bool _routeBuilt = false;
@@ -35,10 +28,10 @@ class _NavigationPageState extends State<NavigationPage> {
   
   double _distanceRemaining = 0.0;
   double _durationRemaining = 0.0;
+
+  String _instruction = "";
   
  
-
-
   /// Get current location
   void getCurrentLocation() async {
     
@@ -67,71 +60,66 @@ class _NavigationPageState extends State<NavigationPage> {
     _locationData = await location.getLocation();
 
     setState(() {
-      _latitude = _locationData.latitude!;
-      _longitude = _locationData.longitude!;
+      _positionLatitude = _locationData.latitude!;
+      _positionLongitude = _locationData.longitude!;
     });
   }
   
   
-
   @override
   void initState() {
     super.initState();
     initialize();
   }
 
-  late double _latitude, _longitude;
-
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initialize() async {
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
     if (!mounted) return;
-
-    
     getCurrentLocation();
-    
-
     _directions = MapBoxNavigation(onRouteEvent: _onEmbeddedRouteEvent);
-    _options = MapBoxOptions(
-      // initialLatitude: _latitude,
-      // initialLongitude: _longitude,
-      zoom: 10.0,
-      tilt: 0.0,
-      bearing: 0.0,
-      enableRefresh: false,
-      alternatives: true,
-      voiceInstructionsEnabled: true,
-      bannerInstructionsEnabled: true,
-      allowsUTurnAtWayPoints: true,
-      mode: MapBoxNavigationMode.drivingWithTraffic,
-      units: VoiceUnits.imperial,
-      simulateRoute: false,
-      animateBuildRoute: true,
-      longPressDestinationEnabled: true,
-      language: "fr"
-    );
-
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await _directions.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
   }
 
+   
+  Widget buildLatitudeField() => TextFormField(
+    decoration: const InputDecoration(
+      labelText: "Latitude",
+      hintText: "48.97736288804228",
+      border: OutlineInputBorder(),
+    ),
+    validator: (value) {
+      if (value == null || value.isEmpty) {
+        return "Veuillez entrer une latitude valide !";
+      } 
+      return null;
+    },
+    onSaved: (latitude) {
+      _destinationLatitude = latitude!;
+    },
+    keyboardType: TextInputType.number,
+  );
+
+  Widget buildLongitudeField() => TextFormField(
+    decoration: const InputDecoration(
+      labelText: "Longitude",
+      hintText: "1.911989432551735",
+      border: OutlineInputBorder(),
+    ),
+    validator: (value) {
+      if (value == null || value.isEmpty) {
+        return "Veuillez entrer une longitude valide !";
+      }
+     
+      return null;
+    },
+    onSaved: (longitude) {
+      _destinationLongitude = longitude!;
+    },
+    keyboardType: TextInputType.number,
+  );
 
 
   @override
   Widget build(BuildContext context) {
-
-   
 
     return MaterialApp(
       home: Scaffold(
@@ -149,89 +137,50 @@ class _NavigationPageState extends State<NavigationPage> {
           title: const Text(
             'Navigation Page',
             style: TextStyle(
-                color: Colors.black, fontSize: 20, fontWeight: FontWeight.w700),
+            color: Colors.black, fontSize: 20, fontWeight: FontWeight.w700),
           ),
         ),
-        body: Center(
-          child: Column(children: <Widget>[
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    inputText(
-                      label: "Latitude",
-                      obsecureText: false,
-                      hintext: "48.97736288804228",
-                      context: context
-                    ),
-                    const SizedBox(height: 20),
-                    inputText(
-                      label: "Longitude",
-                      obsecureText: false,
-                      hintext: "1.911989432551735",
-                      context: context
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.8,
-                          // ignore: deprecated_member_use
-                          child: RaisedButton(
-                            textColor: Colors.white,
-                            color: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15.0),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Text("Rechercher"),
-                                SizedBox(width: 7),
-                                Icon(Icons.search)
-                              ],
-                            ),
-                            onPressed: () async {
-                              var wayPoints = <WayPoint>[];
-                              wayPoints.add(WayPoint(name: "my pos", latitude: _latitude, longitude: _longitude));
-                              wayPoints.add(_destination);
+        
+        body: Form(
+          key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const SizedBox(height: 20),
+              buildLatitudeField(),
+              const SizedBox(height: 20),
+              buildLongitudeField(),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    
+                    var wayPoints = <WayPoint>[];
+                    wayPoints.add(WayPoint(name: "Position", latitude: _positionLatitude, longitude: _positionLongitude));
+                    wayPoints.add(WayPoint(name: "Destination", latitude: double.parse(_destinationLatitude), longitude:  double.parse(_destinationLongitude)));
 
-                              await _directions.startNavigation(
-                                wayPoints: wayPoints,
-                                options: MapBoxOptions(
-                                  mode:
-                                    MapBoxNavigationMode.drivingWithTraffic,
-                                    simulateRoute: false,
-                                    language: "fr",
-                                    units: VoiceUnits.metric
-                                )
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                    await _directions.startNavigation(
+                      wayPoints: wayPoints,
+                      options: MapBoxOptions(
+                        mode:
+                          MapBoxNavigationMode.drivingWithTraffic,
+                          simulateRoute: false,
+                          language: "fr",
+                          units: VoiceUnits.metric
+                      )
+                    );
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Processing Data')),
+                    );
+                  }
+                },
+                child: Text('Rechercher $_instruction'),
               ),
-            ),
-            Expanded(
-              flex: 1,
-              child: Container(
-                color: Colors.grey,
-                child: MapBoxNavigationView(
-                    options: _options,
-                    onRouteEvent: _onEmbeddedRouteEvent,
-                    onCreated:
-                        (MapBoxNavigationViewController controller) async {
-                      _controller = controller;
-                      controller.initialize();
-                    }),
-              ),
-            )
-          ]),
+            ],
+          ),
         ),
       ),
     );
@@ -244,8 +193,9 @@ class _NavigationPageState extends State<NavigationPage> {
     switch (e.eventType) {
       case MapBoxEvent.progress_change:
         var progressEvent = e.data as RouteProgressEvent;
-        if (progressEvent.currentStepInstruction != null)
+        if (progressEvent.currentStepInstruction != null) {
           _instruction = progressEvent.currentStepInstruction!;
+        }
         break;
       case MapBoxEvent.route_building:
       case MapBoxEvent.route_built:
