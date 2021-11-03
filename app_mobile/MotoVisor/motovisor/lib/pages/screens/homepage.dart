@@ -99,7 +99,7 @@ class _homepageState extends State<homepage> {
         elevation: 0,
         backgroundColor: Colors.white,
         title: const Text(
-          'Home Page',
+          'Accueil',
           style: TextStyle(
               color: Colors.black, fontSize: 20, fontWeight: FontWeight.w700),
         ),
@@ -161,7 +161,7 @@ class _homepageState extends State<homepage> {
                             size: 100,
                             color: Colors.blue[500],
                           ),
-                          Text("Vitesse : $_speedMsg")
+                          Text(_speedMsg)
                         ],
                       ),
                     ),
