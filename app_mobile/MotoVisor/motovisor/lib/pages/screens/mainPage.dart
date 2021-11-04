@@ -23,7 +23,7 @@ class mainPage extends StatelessWidget {
             const SizedBox(height: 15),
             // ignore: prefer_const_constructors
             Text(
-              'This is a slogan',
+              'Moto Visor',
               style: const TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w700,
