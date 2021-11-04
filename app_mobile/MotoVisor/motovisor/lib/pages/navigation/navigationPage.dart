@@ -17,7 +17,6 @@ class _NavigationPageState extends State<NavigationPage> {
 
   final _formKey = GlobalKey<FormState>();
   late MapBoxNavigation _directions;
-  late MapBoxOptions _options;
   late MapBoxNavigationViewController _controller;
   late double _positionLatitude, _positionLongitude;
   late String _destinationLatitude, _destinationLongitude;
