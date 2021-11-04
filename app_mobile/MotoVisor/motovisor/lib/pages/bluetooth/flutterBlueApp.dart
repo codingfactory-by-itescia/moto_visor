@@ -74,7 +74,7 @@ class FindDevicesScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: RefreshIndicator(
         onRefresh: () =>
-            FlutterBlue.instance.startScan(timeout: Duration(seconds: 4)),
+            FlutterBlue.instance.startScan(timeout: Duration(seconds: 10)),
         child: SingleChildScrollView(
           child: Column(
             children: <Widget>[

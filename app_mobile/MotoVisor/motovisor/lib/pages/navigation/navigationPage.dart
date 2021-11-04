@@ -17,7 +17,6 @@ class _NavigationPageState extends State<NavigationPage> {
 
   final _formKey = GlobalKey<FormState>();
   late MapBoxNavigation _directions;
-  late MapBoxOptions _options;
   late MapBoxNavigationViewController _controller;
   late double _positionLatitude, _positionLongitude;
   late String _destinationLatitude, _destinationLongitude;
@@ -135,7 +134,7 @@ class _NavigationPageState extends State<NavigationPage> {
           elevation: 0,
           backgroundColor: Colors.white,
           title: const Text(
-            'Navigation Page',
+            'Page de Navigation',
             style: TextStyle(
             color: Colors.black, fontSize: 20, fontWeight: FontWeight.w700),
           ),
@@ -173,11 +172,11 @@ class _NavigationPageState extends State<NavigationPage> {
                     );
 
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Processing Data')),
+                      const SnackBar(content: Text('Traitement des données ...')),
                     );
                   }
                 },
-                child: Text('Rechercher $_instruction'),
+                child: const Text('Rechercher'),
               ),
             ],
           ),
