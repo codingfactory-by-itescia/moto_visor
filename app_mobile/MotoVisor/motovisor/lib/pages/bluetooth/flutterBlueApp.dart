@@ -12,6 +12,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:location/location.dart';
 import 'package:moto_visor/pages/screens/homepage.dart';
 import 'package:moto_visor/pages/widget/widgets.dart';
 
@@ -178,7 +179,7 @@ class FindDevicesScreen extends StatelessWidget {
 }
 
 class DeviceScreen extends StatelessWidget {
-  const DeviceScreen({Key? key, required this.device}) : super(key: key);
+   DeviceScreen({Key? key, required this.device}) : super(key: key);
 
   final BluetoothDevice device;
 
@@ -226,7 +227,38 @@ class DeviceScreen extends StatelessWidget {
         )
         .toList();
   }
+  var _speedString = "";
+  void getCurrentSpeedLocation() async {
+    Location location = Location();
 
+    location.enableBackgroundMode(
+        enable: true); // To receive location when application is in background
+
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    location.onLocationChanged.listen((LocationData currentLocation) {
+      var _speed = (currentLocation.speed! * 3.6); // m/s => km/h
+      _speedString = _speed.toStringAsFixed(0);
+    });
+  }
+  
   void connect(BluetoothDevice device) async {
     
     await device.connect();
@@ -237,8 +269,9 @@ class DeviceScreen extends StatelessWidget {
       for (BluetoothService service in services) {
         for(BluetoothCharacteristic c in service.characteristics) {
           try {
+            getCurrentSpeedLocation();
             await c.write(utf8.encode("speed"), withoutResponse: true);
-            await c.write(utf8.encode("125"), withoutResponse: true);
+            await c.write(utf8.encode(_speedString), withoutResponse: true);
           } on PlatformException {
             print("error");
           }
