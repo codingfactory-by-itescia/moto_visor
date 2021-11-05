@@ -5,10 +5,14 @@
 // ignore_for_file: prefer_const_constructors, deprecated_member_use, prefer_const_literals_to_create_immutables, import_of_legacy_library_into_null_safe, file_names
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:moto_visor/pages/screens/homepage.dart';
 import 'package:moto_visor/pages/widget/widgets.dart';
 
 class FlutterBlueApp extends StatelessWidget {
@@ -68,6 +72,27 @@ class BluetoothOffScreen extends StatelessWidget {
 class FindDevicesScreen extends StatelessWidget {
   const FindDevicesScreen({Key? key}) : super(key: key);
 
+  void connect(BluetoothDevice device) async {
+    await device.connect();
+
+    while(true) {
+      List<BluetoothService> services = await device.discoverServices();
+
+      for (BluetoothService service in services) {
+        for(BluetoothCharacteristic c in service.characteristics) {
+          try {
+            await c.write(utf8.encode("speed"), withoutResponse: true);
+            await c.write(utf8.encode("125"), withoutResponse: true);
+          } on PlatformException {
+            print("error");
+          }
+        }
+      }
+
+      sleep(Duration(seconds:2));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,7 +143,7 @@ class FindDevicesScreen extends StatelessWidget {
                           result: r,
                           onTap: () => Navigator.of(context)
                               .push(MaterialPageRoute(builder: (context) {
-                            r.device.connect();
+                            connect(r.device);
                             return DeviceScreen(device: r.device);
                           })),
                         ),
@@ -178,8 +203,8 @@ class DeviceScreen extends StatelessWidget {
                     characteristic: c,
                     onReadPressed: () => c.read(),
                     onWritePressed: () async {
-                      await c.write(_getRandomBytes(), withoutResponse: true);
-                      await c.read();
+                      await c.write(utf8.encode("speed"), withoutResponse: true);
+                      await c.write(utf8.encode("120"), withoutResponse: true);
                     },
                     onNotificationPressed: () async {
                       await c.setNotifyValue(!c.isNotifying);
@@ -202,6 +227,28 @@ class DeviceScreen extends StatelessWidget {
         .toList();
   }
 
+  void connect(BluetoothDevice device) async {
+    
+    await device.connect();
+
+    while(true) {
+      List<BluetoothService> services = await device.discoverServices();
+
+      for (BluetoothService service in services) {
+        for(BluetoothCharacteristic c in service.characteristics) {
+          try {
+            await c.write(utf8.encode("speed"), withoutResponse: true);
+            await c.write(utf8.encode("125"), withoutResponse: true);
+          } on PlatformException {
+            print("error");
+          }
+        }
+      }
+
+      sleep(Duration(seconds:2));
+    }
+  }
+
   // this is the tile
   @override
   Widget build(BuildContext context) {
@@ -221,7 +268,7 @@ class DeviceScreen extends StatelessWidget {
                   text = 'DISCONNECT';
                   break;
                 case BluetoothDeviceState.disconnected:
-                  onPressed = () => device.connect();
+                  onPressed = () => connect(device);
                   text = 'CONNECT';
                   break;
                 default:
