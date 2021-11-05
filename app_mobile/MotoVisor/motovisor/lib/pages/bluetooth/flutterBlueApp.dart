@@ -157,52 +157,29 @@ class DeviceScreen extends StatelessWidget {
 
   final BluetoothDevice device;
 
-  List<int> _getRandomBytes() {
-    final math = Random();
-    return [
-      math.nextInt(255),
-      math.nextInt(255),
-      math.nextInt(255),
-      math.nextInt(255)
-    ];
-  }
-
   List<Widget> _buildServiceTiles(List<BluetoothService> services) {
     return services
-        .map(
-          (s) => ServiceTile(
-            service: s,
-            characteristicTiles: s.characteristics
-                .map(
-                  (c) => CharacteristicTile(
-                    characteristic: c,
-                    onReadPressed: () => c.read(),
-                    onWritePressed: () async {
-                      await c.write(_getRandomBytes(), withoutResponse: true);
-                      await c.read();
-                    },
-                    onNotificationPressed: () async {
-                      await c.setNotifyValue(!c.isNotifying);
-                      await c.read();
-                    },
-                    descriptorTiles: c.descriptors
-                        .map(
-                          (d) => DescriptorTile(
-                            descriptor: d,
-                            onReadPressed: () => d.read(),
-                            onWritePressed: () => d.write(_getRandomBytes()),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                )
-                .toList(),
-          ),
-        )
+        .map((e) => Column(
+              children: [
+                ListTile(
+                  title: Text("OFF"),
+                  onTap: () {
+                    print(e.characteristics);
+                    e.characteristics[0].write([0]);
+                  },
+                ),
+                ListTile(
+                  title: Text("ON"),
+                  onTap: () {
+                    print(e.characteristics);
+                    e.characteristics[0].write([1]);
+                  },
+                ),
+              ],
+            ))
         .toList();
   }
 
-  // this is the tile
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -229,7 +206,7 @@ class DeviceScreen extends StatelessWidget {
                   text = snapshot.data.toString().substring(21).toUpperCase();
                   break;
               }
-              return FlatButton(
+              return TextButton(
                   onPressed: onPressed,
                   child: Text(
                     text,
@@ -250,8 +227,8 @@ class DeviceScreen extends StatelessWidget {
               initialData: BluetoothDeviceState.connecting,
               builder: (c, snapshot) => ListTile(
                 leading: (snapshot.data == BluetoothDeviceState.connected)
-                    ? const Icon(Icons.bluetooth_connected)
-                    : const Icon(Icons.bluetooth_disabled),
+                    ? Icon(Icons.bluetooth_connected)
+                    : Icon(Icons.bluetooth_disabled),
                 title: Text(
                     'Device is ${snapshot.data.toString().split('.')[1]}.'),
                 subtitle: Text('${device.id}'),
@@ -261,11 +238,11 @@ class DeviceScreen extends StatelessWidget {
                   builder: (c, snapshot) => IndexedStack(
                     index: snapshot.data! ? 1 : 0,
                     children: <Widget>[
-                      IconButton(
-                        icon: Icon(Icons.refresh),
+                      TextButton(
+                        child: Text("Show Services"),
                         onPressed: () => device.discoverServices(),
                       ),
-                      const IconButton(
+                      IconButton(
                         icon: SizedBox(
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation(Colors.grey),
@@ -277,18 +254,6 @@ class DeviceScreen extends StatelessWidget {
                       )
                     ],
                   ),
-                ),
-              ),
-            ),
-            StreamBuilder<int>(
-              stream: device.mtu,
-              initialData: 0,
-              builder: (c, snapshot) => ListTile(
-                title: Text('MTU Size'),
-                subtitle: Text('${snapshot.data} bytes'),
-                trailing: IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () => device.requestMtu(223),
                 ),
               ),
             ),
